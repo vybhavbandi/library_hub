@@ -1,0 +1,32 @@
+# Dependencies
+node_modules/
+frontend/node_modules/
+
+# Build outputs
+frontend/dist/
+backend-spring/target/
+
+# IDE
+.idea/
+*.iml
+.vscode/
+
+# Logs
+*.log
+logs/
+
+# Environment files
+.env.local
+.env.production
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Java
+*.class
+*.jar
+*.war
+
+# Maven
+backend-spring/.mvn/
