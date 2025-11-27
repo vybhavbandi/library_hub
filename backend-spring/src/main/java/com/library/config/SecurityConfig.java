@@ -91,6 +91,7 @@ public class SecurityConfig {
                 
                 // User endpoints (authenticated - both USER and ADMIN can access)
                 .requestMatchers("/api/user/**").hasAnyRole("USER", "ADMIN")
+                .requestMatchers("/api/wishlist/**").hasAnyRole("USER", "ADMIN")
                 .requestMatchers(HttpMethod.POST, "/api/books/*/borrow").hasAnyRole("USER", "ADMIN")
                 .requestMatchers(HttpMethod.POST, "/api/books/*/reserve").hasAnyRole("USER", "ADMIN")
                 .requestMatchers(HttpMethod.POST, "/api/books/*/return").hasAnyRole("USER", "ADMIN")

@@ -100,6 +100,14 @@ export const userAPI = {
   renewBook: (borrowId) => api.post(`/user/renew/${borrowId}`),
 };
 
+// Wishlist endpoints
+export const wishlistAPI = {
+  getWishlist: () => api.get('/wishlist'),
+  addToWishlist: (bookId) => api.post(`/wishlist/${bookId}`),
+  removeFromWishlist: (bookId) => api.delete(`/wishlist/${bookId}`),
+  checkInWishlist: (bookId) => api.get(`/wishlist/check/${bookId}`),
+};
+
 // Admin endpoints
 export const adminAPI = {
   getAllBooks: (params) => api.get('/admin/books', { params }),

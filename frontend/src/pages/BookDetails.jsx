@@ -1,7 +1,7 @@
 import Navbar from '../components/Navbar.jsx';
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { booksAPI, userAPI } from '../services/api.js';
+import { booksAPI, userAPI, wishlistAPI } from '../services/api.js';
 import { useAuth } from '../contexts/AuthContext.jsx';
 
 const BookDetails = () => {
@@ -13,6 +13,8 @@ const BookDetails = () => {
   const [error, setError] = useState(null);
   const [actionLoading, setActionLoading] = useState(false);
   const [userBorrowedThis, setUserBorrowedThis] = useState(false);
+  const [inWishlist, setInWishlist] = useState(false);
+  const [message, setMessage] = useState({ type: '', text: '' });
 
   useEffect(() => {
     loadBook();
@@ -26,7 +28,7 @@ const BookDetails = () => {
       const bookData = response.data?.data || response.data;
       setBook(bookData);
 
-      // Check if user has this book borrowed
+      // Check if user has this book borrowed and in wishlist
       if (isAuthenticated) {
         try {
           const historyRes = await userAPI.getBorrowHistory();
@@ -36,8 +38,12 @@ const BookDetails = () => {
             (entry.status === 'BORROWED' || entry.status === 'RENEWED')
           );
           setUserBorrowedThis(hasBorrowed);
+          
+          // Check wishlist
+          const wishlistRes = await wishlistAPI.checkInWishlist(id);
+          setInWishlist(wishlistRes.data?.data?.inWishlist || false);
         } catch (e) {
-          console.log('Could not check borrow status');
+          console.log('Could not check status');
         }
       }
     } catch (err) {
@@ -85,9 +91,37 @@ const BookDetails = () => {
     setActionLoading(true);
     try {
       await booksAPI.reserveBook(id);
-      alert('Book reserved! You will be notified when available.');
+      showMessage('success', 'Book reserved! You will be notified when available.');
     } catch (err) {
-      alert(err.response?.data?.message || 'Failed to reserve book');
+      showMessage('error', err.response?.data?.message || 'Failed to reserve book');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const showMessage = (type, text) => {
+    setMessage({ type, text });
+    setTimeout(() => setMessage({ type: '', text: '' }), 3000);
+  };
+
+  const handleWishlist = async () => {
+    if (!isAuthenticated) {
+      navigate('/login', { state: { from: `/book/${id}` } });
+      return;
+    }
+    setActionLoading(true);
+    try {
+      if (inWishlist) {
+        await wishlistAPI.removeFromWishlist(id);
+        setInWishlist(false);
+        showMessage('success', 'Removed from wishlist');
+      } else {
+        await wishlistAPI.addToWishlist(id);
+        setInWishlist(true);
+        showMessage('success', 'Added to wishlist!');
+      }
+    } catch (err) {
+      showMessage('error', err.response?.data?.message || 'Failed to update wishlist');
     } finally {
       setActionLoading(false);
     }
@@ -124,10 +158,18 @@ const BookDetails = () => {
   const isAvailable = book.availableCopies > 0;
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors">
       <Navbar />
+      {/* Message Toast */}
+      {message.text && (
+        <div className={`fixed top-20 right-4 z-50 px-6 py-3 rounded-lg shadow-lg ${
+          message.type === 'success' ? 'bg-green-500 text-white' : 'bg-red-500 text-white'
+        }`}>
+          {message.text}
+        </div>
+      )}
       <div className="max-w-5xl mx-auto px-4 py-12">
-        <button onClick={() => navigate(-1)} className="mb-6 text-blue-600 hover:text-blue-800 flex items-center">
+        <button onClick={() => navigate(-1)} className="mb-6 text-blue-600 dark:text-blue-400 hover:text-blue-800 flex items-center">
           ← Back
         </button>
 
@@ -189,7 +231,7 @@ const BookDetails = () => {
               )}
 
               {/* Actions */}
-              <div className="flex space-x-4">
+              <div className="flex flex-wrap gap-3">
                 {userBorrowedThis ? (
                   <button
                     onClick={handleReturn}
@@ -218,6 +260,19 @@ const BookDetails = () => {
                     )}
                   </>
                 )}
+                
+                {/* Wishlist Button */}
+                <button
+                  onClick={handleWishlist}
+                  disabled={actionLoading}
+                  className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                    inWishlist 
+                      ? 'bg-red-100 text-red-600 hover:bg-red-200 dark:bg-red-900/30 dark:text-red-400' 
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300'
+                  }`}
+                >
+                  {inWishlist ? '💔 Remove from Wishlist' : '💝 Add to Wishlist'}
+                </button>
               </div>
             </div>
           </div>
