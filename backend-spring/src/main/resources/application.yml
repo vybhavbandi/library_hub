@@ -1,0 +1,65 @@
+server:
+  port: ${SERVER_PORT:8081}
+
+spring:
+  application:
+    name: library-management-system
+
+  # Database Configuration - H2 for local dev, MySQL for Docker
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:h2:mem:library_db;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE}
+    username: ${SPRING_DATASOURCE_USERNAME:sa}
+    password: ${SPRING_DATASOURCE_PASSWORD:password}
+    driver-class-name: ${SPRING_DATASOURCE_DRIVER:org.h2.Driver}
+
+  # JPA Configuration
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+
+  # H2 Console (for development)
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+
+  # Jackson Configuration
+  jackson:
+    default-property-inclusion: non_null
+    serialization:
+      write-dates-as-timestamps: false
+
+# JWT Configuration
+jwt:
+  secret: mySecretKey123456789012345678901234567890
+  refresh-secret: myRefreshSecretKey123456789012345678901234567890
+  expiration: 900000  # 15 minutes in milliseconds
+  refresh-expiration: 604800000  # 7 days in milliseconds
+
+# CORS Configuration
+cors:
+  allowed-origins: http://localhost:5173,http://localhost:3000,http://localhost:8080,http://localhost:8081
+  allowed-methods: GET,POST,PUT,DELETE,OPTIONS
+  allowed-headers: "*"
+  allow-credentials: true
+
+# Logging Configuration
+logging:
+  level:
+    com.library: DEBUG
+    org.springframework.security: INFO
+    org.hibernate.SQL: DEBUG
+
+# Management Endpoints
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: always
