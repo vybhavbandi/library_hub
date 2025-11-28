@@ -1,40 +1,39 @@
-
 services:
   db:
     image: mysql:8.0
-    container_name: olms-db
+    container_name: library-db
     environment:
       MYSQL_ROOT_PASSWORD: root
-      MYSQL_DATABASE: online_library
+      MYSQL_DATABASE: library_db
     volumes:
       - mysql_data:/var/lib/mysql
+    ports:
+      - "3306:3306"
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-uroot", "-proot"]
       interval: 5s
       timeout: 3s
       retries: 20
-    # optional host port for DB tools:
-    # ports:
-    #   - "3307:3306"
 
   backend:
-    build: ./backend-spring
-    container_name: olms-backend
+    image: vybhavbandi29/library-hub-backend:latest
+    container_name: library-backend
     depends_on:
       db:
         condition: service_healthy
     environment:
-      SPRING_DATASOURCE_URL: jdbc:mysql://db:3306/online_library?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+      SPRING_DATASOURCE_URL: jdbc:mysql://db:3306/library_db?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC&createDatabaseIfNotExist=true
       SPRING_DATASOURCE_USERNAME: root
       SPRING_DATASOURCE_PASSWORD: root
+      SPRING_DATASOURCE_DRIVER: com.mysql.cj.jdbc.Driver
       SERVER_PORT: 8081
     ports:
       - "8081:8081"
     restart: unless-stopped
 
   frontend:
-    build: ./frontend
-    container_name: olms-frontend
+    image: vybhavbandi29/library-hub-frontend:latest
+    container_name: library-frontend
     depends_on:
       - backend
     ports:
@@ -42,4 +41,4 @@ services:
     restart: unless-stopped
 
 volumes:
-  mysql_data: {}
+  mysql_data:
